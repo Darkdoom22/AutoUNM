@@ -1,6 +1,6 @@
 _addon.name = "autounm"
 _addon.author = "Darkdoom/Uwu"
-_addon.version = "3.1"
+_addon.version = "3.2"
 _addon.command = "unm"
 _addon.commands = {'start', 'stop', 'status'}
 _addon.language = 'English'
@@ -49,7 +49,6 @@ Junction_Status = "None"
 Sparks = 0
 Accolades = 0
 Menu_Open = 0
-In_Combat = 0
 Spam_Delay = 1
 Spam_Prevention = os.clock()
 Inject_Protection = os.clock()
@@ -72,7 +71,6 @@ local CharacterInfo = windower.ffxi.get_player()
   if GameInfo.logged_in == true then
 
   Menu_Open = GameInfo.menu_open
-  In_Combat = CharacterInfo.in_combat
   Status = CharacterInfo.status
   
   elseif GameInfo.logged_in == false then
@@ -236,25 +234,24 @@ end)
 
 function Controller()
 
+ 
   if os.clock() - Controller_Protection > Spam_Delay then
-      
-    if In_Combat == true then
+    
+    if Status == 1 then
     
     Bot_Status = "In Combat"
     Junction_Status = "Despawned"
     Target = windower.ffxi.get_mob_by_target('t')
       
       if Target ~= nil then
-     
       Current_Target = Target.name
-     
       end
---      
-    elseif Bot_Status == "Junction Spawned" and In_Combat == false then
+      
+    elseif Bot_Status == "Junction Spawned" and Status == 0 then
 
     OpenMenu()
   
-    elseif Bot_Status == "In Menu" and In_Combat == false then
+    elseif Bot_Status == "In Menu" and Status == 4 then
     
     Menu()
             
@@ -269,18 +266,23 @@ end
 function OpenMenu()
 
 local Junction = windower.ffxi.get_mob_by_name('Ethereal Junction')
-
+local player = windower.ffxi.get_player()
+local status = player.status
   if Junction then
 
-    if os.clock() - Inject_Protection > 4 and Menu_Open == false and In_Combat == false then
+    if os.clock() - Inject_Protection > 4 and Menu_Open == false and Status == 0 then
       
-    local p = packets.new('outgoing', 0x01A, {
-          ['Target'] = Junction.id,
-          ['Target Index'] = Junction.index,
-          })    
-     packets.inject(p)
-     Bot_Status = "In Menu"
-     Inject_Protection = os.clock()      
+      if Menu_Open == false then
+  
+      local p = packets.new('outgoing', 0x01A, {
+            ['Target'] = Junction.id,
+            ['Target Index'] = Junction.index,
+            })    
+      packets.inject(p)
+      Bot_Status = "In Menu"
+      Inject_Protection = os.clock()      
+      
+      end
   
      end
    
@@ -315,6 +317,7 @@ windower.register_event('prerender', function()
     GetInfo()
     JunctionFinder()
     Controller()
+    
     Prerender_Delay = os.clock()
     
     end
