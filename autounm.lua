@@ -1,6 +1,6 @@
 _addon.name = "autounm"
 _addon.author = "Darkdoom/Uwu"
-_addon.version = "3.2"
+_addon.version = "3.3"
 _addon.command = "unm"
 _addon.commands = {'start', 'stop', 'status'}
 _addon.language = 'English'
@@ -46,9 +46,11 @@ Bot_Status = "None"
 Char_Status = "None"
 Current_Target = "None"
 Junction_Status = "None"
+M_1 = false
 Sparks = 0
 Accolades = 0
 Menu_Open = 0
+Menu_ID = 0
 Spam_Delay = 1
 Spam_Prevention = os.clock()
 Inject_Protection = os.clock()
@@ -72,7 +74,6 @@ local CharacterInfo = windower.ffxi.get_player()
 
   Menu_Open = GameInfo.menu_open
   Status = CharacterInfo.status
-  
   elseif GameInfo.logged_in == false then
  
   end
@@ -143,7 +144,7 @@ function JunctionFinder()
 
 local Junction = windower.ffxi.get_mob_by_name('Ethereal Junction')
   
-  if os.clock() - Junction_Delay > 5 then
+  if os.clock() - Junction_Delay > 1 then
     
     Bot_Status = "Waiting for Respawn"
   
@@ -250,9 +251,10 @@ function Controller()
     elseif Bot_Status == "Junction Spawned" and Status == 0 then
 
     OpenMenu()
+
   
-    elseif Bot_Status == "In Menu" and Status == 4 then
-    
+    elseif Bot_Status == "Junction Spawned" and Status == 4 then
+
     Menu()
             
     end
@@ -277,6 +279,7 @@ local status = player.status
       local p = packets.new('outgoing', 0x01A, {
             ['Target'] = Junction.id,
             ['Target Index'] = Junction.index,
+            ['Category'] = 0,
             })    
       packets.inject(p)
       Bot_Status = "In Menu"
@@ -290,15 +293,62 @@ local status = player.status
 
 end  
 
+windower.register_event('incoming chunk', function(id, data, blocked)
+    
+    if id == 0x034 then
+      
+      local npc_int = packets.parse('incoming', data)
+      Menu_ID = npc_int['Menu ID']
+      Menu_Open = true
+    return true
+   
+    end
+    
+  end)
+
+
 function Menu()
 
-  if os.clock() - Menu_Protection > 2 and Menu_Open == true then
-         
-  windower.send_command('setkey enter down; wait 0.3; setkey enter up')
-   
-  windower.send_command('setkey up down; wait 0.3; setkey up up')
+  if os.clock() - Menu_Protection > 1 and Status == 4 then
+    
+    local ej = windower.ffxi.get_mob_by_name('Ethereal Junction')
+    local zone = windower.ffxi.get_info().zone
 
-  windower.send_command('setkey enter down; wait 0.3; setkey enter up') 
+    if ej ~= nil and M_1 == false then
+      
+      local m = packets.new('outgoing', 0x05B, {
+      ['Target'] = ej.id,
+      ['Option Index'] = 12,
+      ['_unknown1'] = 0,
+      ['Target Index'] = ej.index,
+      ['Automated Message'] = true,
+      ['_unknown2'] = 0,
+      ['Zone'] = zone,
+      ['Menu ID'] = Menu_ID,
+      })
+      
+      packets.inject(m)
+      M_1 = true
+     
+    end
+       
+    if M_1 == true then
+    
+      local m2 = packets.new('outgoing', 0x05B, {
+      ['Target'] = ej.id,
+      ['Option Index'] = 1,
+      ['_unknown1'] = 0,
+      ['Target Index'] = ej.index,
+      ['Automated Message'] = false,
+      ['_unknown2'] = 0,
+      ['Zone'] = zone,
+      ['Menu ID'] = Menu_ID,
+      })
+  
+      packets.inject(m2)
+      M_1 = false
+    
+    end
  
   Menu_Protection = os.clock()      
   
