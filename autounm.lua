@@ -84,12 +84,7 @@ function check_incoming_text(original)
   
   local org = original:lower()
     
-  if org:find('sparks of eminence, and now possess a total of 99999') ~= nil then
-    
-    Bot_Status = "Sparks Capped"
-    Running = false
-    
-  elseif org:find('one or more party/alliance members do not have the required') ~= nil then
+  if org:find('one or more party/alliance members do not have the required') ~= nil then
 
     Bot_Status = "Out of Accolades"
     Running = false
