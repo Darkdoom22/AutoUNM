@@ -60,8 +60,9 @@ Controller_Protection = os.clock()
 Update_Protection = os.clock()
 Junction_Delay = os.clock()
 Status = 0
-Running = true
+Running = false
 text_box = texts.new(settings)
+Objective = 0 --used for zones with more than one unm
 
 --Info and Display functions
 
@@ -84,7 +85,12 @@ function check_incoming_text(original)
   
   local org = original:lower()
     
-  if org:find('one or more party/alliance members do not have the required') ~= nil then
+  if org:find('sparks of eminence, and now possess a total of 99999') ~= nil then
+    
+    Bot_Status = "Sparks Capped"
+   -- Running = false
+    
+  elseif org:find('one or more party/alliance members do not have the required') ~= nil then
 
     Bot_Status = "Out of Accolades"
     Running = false
@@ -165,15 +171,31 @@ local Junction = windower.ffxi.get_mob_by_name('Ethereal Junction')
 end
 
 function unm_command(...)
-  if #arg > 3 then
+
+  if #arg > 4 then
   
     windower.add_to_chat(167, 'Invalid command. //unm help for valid options.')
   
-  elseif #arg == 1 and arg[1]:lower() == 'start' then
+  elseif #arg == 2 and arg[1]:lower() == 'start' and arg[2]:lower() == "obj1" then
   
     if Running == false then
   
       Running = true
+      Objective = 1
+      windower.add_to_chat(200, 'UNM - START')
+  
+    else
+  
+      windower.add_to_chat(200, 'UNM is already running.')
+  
+    end
+  
+  elseif #arg == 2 and arg[1]:lower() == 'start' and arg[2]:lower() == "obj2" then
+  
+      if Running == false then
+  
+      Running = true
+      Objective = 2
       windower.add_to_chat(200, 'UNM - START')
   
     else
@@ -237,6 +259,7 @@ function Controller()
     
     Bot_Status = "In Combat"
     Junction_Status = "Despawned"
+    Menu_Open = "False"
     Target = windower.ffxi.get_mob_by_target('t')
       
       if Target ~= nil then
@@ -309,11 +332,29 @@ function Menu()
     local ej = windower.ffxi.get_mob_by_name('Ethereal Junction')
     local zone = windower.ffxi.get_info().zone
 
-    if ej ~= nil and M_1 == false then
+    if ej ~= nil and M_1 == false and Objective == 1 then
       
       local m = packets.new('outgoing', 0x05B, {
       ['Target'] = ej.id,
       ['Option Index'] = 12,
+      ['_unknown1'] = 0,
+      ['Target Index'] = ej.index,
+      ['Automated Message'] = true,
+      ['_unknown2'] = 0,
+      ['Zone'] = zone,
+      ['Menu ID'] = Menu_ID,
+      })
+      
+      packets.inject(m)
+      M_1 = true
+      
+    end
+    
+    if ej ~= nil and M_1 == false and Objective == 2 then
+         
+      local m = packets.new('outgoing', 0x05B, {
+      ['Target'] = ej.id,
+      ['Option Index'] = 268,
       ['_unknown1'] = 0,
       ['Target Index'] = ej.index,
       ['Automated Message'] = true,
