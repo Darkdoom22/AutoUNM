@@ -1,6 +1,6 @@
 _addon.name = "autounm"
 _addon.author = "Darkdoom/Uwu"
-_addon.version = "3.4"
+_addon.version = "3.5"
 _addon.command = "unm"
 _addon.commands = {'start', 'stop', 'status'}
 _addon.language = 'English'
@@ -12,12 +12,8 @@ texts = require 'texts'
 config = require 'config'
 
 require 'strings'
-require 'actions'
 require 'tables'
-require 'sets'
 require 'chat'
-require 'pack'
-require 'logger'
 
 --Textbox defaults
 
@@ -63,6 +59,24 @@ Status = 0
 Running = false
 text_box = texts.new(settings)
 Objective = 0 --used for zones with more than one unm
+tRoEInfo = {
+  ["ID"] = {
+
+  },
+  ["Completion"] = {
+    
+  },
+}
+
+tUnmIDs = 
+  T{817,818,819,820,821,822,823,824,825,
+   826,827,828,829,830,831,832,833,834,
+   835,836,837,854,855,856,857,858,859,
+   860,861,862,863,864,865,866,867,868,
+   869,891,892,893,894,895,896,897,898,
+   899,914,915,916,918,919,920,921,922,
+   923,924
+  }
 
 --Info and Display functions
 
@@ -122,12 +136,28 @@ function CurrencyUpdate()
  
   if os.clock() - Spam_Prevention > 5 then
   
-  windower.packets.inject_outgoing(0x10f,'0000')
+  windower.packets.inject_outgoing(0x10f,'0000') --sparks/acc
   Spam_Prevention = os.clock()
   
   end 
 
 end 
+
+function ValidateROE(roeinfo)
+
+  for _,v in pairs(roeinfo["Completion"]) do
+
+    if v == 1 then
+
+      return false
+
+    end
+
+  end
+
+  return true
+  
+end
 
 windower.register_event("incoming chunk", function(id, data)
 
@@ -137,6 +167,36 @@ windower.register_event("incoming chunk", function(id, data)
   Sparks = p['Sparks of Eminence']
   Accolades = p['Unity Accolades']
   
+  end
+
+  if id == 0x111 then
+
+    local roe_update = packets.parse('incoming', data)
+
+    if roe_update then
+
+      tRoEInfo = {
+        ["ID"] = {
+      
+        },
+        ["Completion"] = {
+          
+        },
+      }
+
+      for i=1, 30 do
+
+        if roe_update[string.format('RoE Quest ID %s', i)] ~= 0 and tUnmIDs:contains(roe_update[string.format('RoE Quest ID %s', i)]) then
+
+        table.insert(tRoEInfo["ID"], roe_update[string.format('RoE Quest ID %s', i)]) 
+        table.insert(tRoEInfo["Completion"], roe_update[string.format('RoE Quest Progress %s', i)])
+
+        end
+
+      end
+
+    end
+
   end
 
 end)  
@@ -182,11 +242,11 @@ function unm_command(...)
   
       Running = true
       Objective = 1
-      windower.add_to_chat(200, 'UNM - START')
-  
+      windower.add_to_chat(200, '[AUTOUNM] - '..'S':color(math.random(1,255))..'T':color(math.random(1,255))..'A':color(math.random(1,255))..'R':color(math.random(1,255))..'T':color(math.random(1,255)))
+   
     else
   
-      windower.add_to_chat(200, 'UNM is already running.')
+      windower.add_to_chat(200, '[AUTOUNM] is already running.')
   
     end
   
@@ -196,11 +256,11 @@ function unm_command(...)
   
       Running = true
       Objective = 2
-      windower.add_to_chat(200, 'UNM - START')
+      windower.add_to_chat(200, '[AUTOUNM] - '..'S':color(math.random(1,255))..'T':color(math.random(1,255))..'A':color(math.random(1,255))..'R':color(math.random(1,255))..'T':color(math.random(1,255)))
   
     else
   
-      windower.add_to_chat(200, 'UNM is already running.')
+      windower.add_to_chat(200, '[AUTOUNM] is already running.')
   
     end
   
@@ -209,11 +269,11 @@ function unm_command(...)
     if Running == true then
   
       Running = false
-      windower.add_to_chat(200, 'UNM - STOP')
+      windower.add_to_chat(200, '[AUTOUNM] - STOP')
   
     else
   
-      windower.add_to_chat(200, 'UNM is not running.')
+      windower.add_to_chat(200, '[AUTOUNM] is not running.')
   
     end
   
@@ -227,7 +287,6 @@ function unm_command(...)
   end
 
 end
-
 
 windower.register_event('addon command', unm_command)
 windower.register_event('incoming text', function(new, old)
@@ -245,8 +304,6 @@ windower.register_event('incoming text', function(new, old)
   end
 
 end)
-
-
 
 ----Main Bot functions
 
@@ -268,8 +325,15 @@ function Controller()
       
     elseif Bot_Status == "Junction Spawned" and Status == 0 then
 
-    OpenMenu()
+      if ValidateROE(tRoEInfo) == false then
 
+        Running = false
+        windower.add_to_chat(163, "[AUTOUNM] You have not yet received a reward from a UNM Objective!")
+
+      else
+        OpenMenu()
+
+      end
   
     elseif Bot_Status == "Junction Spawned" and Status == 4 then
 
