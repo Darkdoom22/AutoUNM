@@ -166,6 +166,12 @@ windower.register_event("incoming chunk", function(id, data)
   local p = packets.parse('incoming', data)
   Sparks = p['Sparks of Eminence']
   Accolades = p['Unity Accolades']
+
+    if Accolades < 3100 then
+      
+      Running = false
+
+    end
   
   end
 
