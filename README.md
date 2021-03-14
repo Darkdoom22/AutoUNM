@@ -9,4 +9,4 @@ Newest version of the unm addon, rewritten to hopefully be much more reliable th
 
 //unm stop - self explanatory
 
-//unm stop - release yourself if you manage to get packet locked
+//unm stuck - release yourself if you manage to get packet locked
