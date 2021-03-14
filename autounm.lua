@@ -67,6 +67,7 @@ tRoEInfo = {
     
   },
 }
+lastOutgoingInjected = false
 
 tUnmIDs = 
   T{817,818,819,820,821,822,823,824,825,
@@ -290,6 +291,10 @@ function unm_command(...)
     windower.add_to_chat(200, '  //unm stop - turns off UNM')  
     windower.add_to_chat(200, '  //unm help - displays this text')
 
+  elseif #arg == 1 and arg[1]:lower() == 'stuck' then
+
+    Release()
+
   end
 
 end
@@ -381,19 +386,69 @@ local status = player.status
 
 end  
 
+windower.register_event('outgoing chunk', function(id, original, _, injected)
+
+
+  if id == 0x01A then
+
+    lastOutgoingInjected = injected
+
+  end
+
+end)
+
 windower.register_event('incoming chunk', function(id, data, blocked)
     
-    if id == 0x034 then
-      
-      local npc_int = packets.parse('incoming', data)
-      Menu_ID = npc_int['Menu ID']
+  if id == 0x034 then
+
+    local npcInteraction = packets.parse('incoming', data)
+    local npcName = windower.ffxi.get_mob_by_id(npcInteraction["NPC"]).name
+
+    if npcName == "Ethereal Junction" and lastOutgoingInjected == true then
+
+      Menu_ID = npcInteraction['Menu ID']
       Menu_Open = true
-    return true
-   
+    
+      return true    
+       
     end
     
-  end)
+    if npcName == "Ethereal Junction" and lastOutgoingInjected == false then
 
+        windower.add_to_chat(163, "[AUTOUNM] user interaction detected, not blocking.")
+
+    end
+
+  end
+    
+end)
+
+packets.raw_fields.incoming[0x052] = L{
+  {ctype='unsigned char',   label='Type'}, --04
+  {ctype='unsigned short',  label='Menu ID'}, --05
+}
+
+function Release()
+
+  if Menu_ID then
+
+    local startRelease = packets.new('incoming', 0x052, {
+      ["Type"] = 2,
+      ["Menu ID"] = Menu_ID,
+    })
+
+    local finishRelease = packets.new('incoming', 0x052, {
+    ["Type"] = 1
+    })
+
+    windower.add_to_chat(167, "[AUTOUNM] Forcing event skip..")
+
+    packets.inject(startRelease)
+    packets.inject(finishRelease)
+
+  end
+
+end
 
 function Menu()
 
