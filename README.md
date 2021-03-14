@@ -8,3 +8,5 @@ Newest version of the unm addon, rewritten to hopefully be much more reliable th
 //unm start obj2 - if doing the 2nd unm in a zone with more than one
 
 //unm stop - self explanatory
+
+//unm stop - release yourself if you manage to get packet locked
