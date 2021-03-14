@@ -1,6 +1,6 @@
 _addon.name = "autounm"
 _addon.author = "Darkdoom/Uwu"
-_addon.version = "3.5"
+_addon.version = "3.6"
 _addon.command = "unm"
 _addon.commands = {'start', 'stop', 'status'}
 _addon.language = 'English'
