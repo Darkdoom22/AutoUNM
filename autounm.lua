@@ -208,9 +208,35 @@ windower.register_event("incoming chunk", function(id, data)
 
 end)  
 
+local function GrabValidJunction()
+
+    local entList = windower.ffxi.get_mob_array()
+
+    for k,v in pairs(entList) do
+
+        local temp = windower.ffxi.get_mob_by_index(k)
+
+        if(temp)then
+
+            if(temp.name == "Ethereal Junction")then
+
+                if(math.sqrt(temp.distance) < 6)then
+
+                    return temp
+                    
+                end
+
+            end
+
+        end
+
+    end
+
+end
+
 function JunctionFinder()
 
-local Junction = windower.ffxi.get_mob_by_name('Ethereal Junction')
+local Junction = GrabValidJunction()
   
   if os.clock() - Junction_Delay > 1 then
     
