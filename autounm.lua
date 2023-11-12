@@ -386,7 +386,7 @@ end
 
 function OpenMenu()
 
-local Junction = windower.ffxi.get_mob_by_name('Ethereal Junction')
+local Junction = GrabValidJunction()
 local player = windower.ffxi.get_player()
 local status = player.status
   if Junction then
@@ -480,7 +480,7 @@ function Menu()
 
   if os.clock() - Menu_Protection > 1 and Status == 4 then
     
-    local ej = windower.ffxi.get_mob_by_name('Ethereal Junction')
+    local ej = GrabValidJunction()
     local zone = windower.ffxi.get_info().zone
 
     if ej ~= nil and M_1 == false and Objective == 1 then
